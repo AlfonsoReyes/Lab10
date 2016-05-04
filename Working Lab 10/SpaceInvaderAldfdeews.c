@@ -56,16 +56,16 @@
 #include "TExaS.h"
 #include "ADC.h"
 #include "SysTickInts.h"
-#include "print.h"
-#include "Sound.h"
-//#include
 
 #define PF1       (*((volatile uint32_t *)0x40025008))
 #define PF2       (*((volatile uint32_t *)0x40025010))
 #define PF3       (*((volatile uint32_t *)0x40025020))
 #define fresh  1
 #define stale  0
-
+#define FAST 1
+#define MEDIUM 2
+#define SLOW 3
+#define lose 'YOU LOSE'
 
 //#define RIGHT 1
 //#define UP 2
@@ -1492,26 +1492,22 @@ const unsigned short ShipBlackout[] = {
 const unsigned short LaserRed[] = {
  0x0000, 0x0000, 0x001F, 0x001F, 0x001F, 0x001F, 0x001F, 0x001F,
 };
-const unsigned short LaserBlack[] = {
- 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-};
 
-
-//Global Variables *************************************************************************************************************************************
+// GLOBAL VARIABLES ************************************************************************************************************
+uint32_t laserhit;
 uint32_t Data;        // 12-bit ADC
 uint32_t Position;    // 32-bit fixed-point 0.001 cm
-uint32_t ADCMail, ADCflag;
+uint32_t ADCMail, ADCflag, laserflag;
 uint32_t slider;		// 0 to 2.5
 uint32_t size;
-uint32_t laserhit;
-uint32_t laserflag;
-uint32_t score;
-uint8_t theme; 			//0 for red, green for blue
 uint32_t speed; 
 uint32_t left_wall_collision;
 uint32_t right_wall_collision;
 uint32_t num_hits;	//number of times laser hit mushroom or centipede
 uint32_t diff_delay;
+
+
+
 
 //Initialize player ship **********************************************************************************************************************************
 struct SStates{																  //Coordinates, Damage, and Image
@@ -1540,6 +1536,7 @@ void Update_Ship(uint32_t slider){
 	  ST7735_DrawBitmap(Ship.x, Ship.y, Ship.image, 11, 13);
 }
 
+
 //Initialize Mushrooms ********************************************************************************************************************************
 typedef enum {Hit0, Hit1, Hit2, Hit3, Hit4} damage;    //Damage 0-4
 struct MStates{																  //Coordinates, Damage, and Image
@@ -1552,11 +1549,11 @@ typedef struct MStates Mtype;
 Mtype Mushroom[20];														  //Spawn twenty mushrooms
 
 void Mushroom_Init(void){	
-	int i,j, place,comparex, comparey, closey=0, closex=0;
+	int i,j, place,comparex, resultx, comparey, resulty, closey=0, closex=0;
 	for(i=0; i<20; i++){
 		place = Random()%14;
 		Mushroom[i].x = place*9;
-				if(Mushroom[i].x < 11){
+		if(Mushroom[i].x < 11){
 			Mushroom[i].x += 11;
 		}
 		if(Mushroom[i].x > 116 ){
@@ -1569,7 +1566,7 @@ void Mushroom_Init(void){
 			if (comparey==place) closey=1;
 			if (comparex==(Mushroom[i].x)) closex=1;
 			if (closey&&closex){						//too close to another mushroom, reset y and check all over again
-				place = (Random()%11)+3;
+				place = (Random()%14)+4;
 				j=0;
 				closey=0;
 				closex=0;
@@ -1584,28 +1581,20 @@ void Mushroom_Init(void){
 
 void Mushroom_Update(uint32_t laserhit){
 	(Mushroom[laserhit].hits)++;
-		if ((Mushroom[laserhit].hits)==Hit1){
-		  ST7735_DrawBitmap(Mushroom[laserhit].x,Mushroom[laserhit].y, Green1Hit, 8, 8);
-			score +=50;
-		}
+		if ((Mushroom[laserhit].hits)==Hit1)
+		   ST7735_DrawBitmap(Mushroom[laserhit].x,Mushroom[laserhit].y, Green1Hit, 8, 8);
 		
-		if ((Mushroom[laserhit].hits)==Hit2){
+		if ((Mushroom[laserhit].hits)==Hit2)
 		   ST7735_DrawBitmap(Mushroom[laserhit].x,Mushroom[laserhit].y, Green2Hit, 8, 8);
-			score +=50;
-		}		
-		if ((Mushroom[laserhit].hits)==Hit3){
-		   ST7735_DrawBitmap(Mushroom[laserhit].x,Mushroom[laserhit].y, Green3Hit, 8, 8);
-			score +=50;
-		}		
-		if ((Mushroom[laserhit].hits)==Hit4){
-		   ST7735_DrawBitmap(Mushroom[laserhit].x,Mushroom[laserhit].y, MushroomBlackout, 8, 8);	
-			score +=150;
-		}		
-	}
-
-  
 		
-//Initialize Centipede ********************************************************************************************************************************
+		if ((Mushroom[laserhit].hits)==Hit3)
+		   ST7735_DrawBitmap(Mushroom[laserhit].x,Mushroom[laserhit].y, Green3Hit, 8, 8);
+		
+		if ((Mushroom[laserhit].hits)==Hit4)
+		   ST7735_DrawBitmap(Mushroom[laserhit].x,Mushroom[laserhit].y, MushroomBlackout, 8, 8);	
+	}		
+
+//Initialize Centipede
 typedef enum {c_Hit0, c_Hit1, c_Hit2, c_Hit3} c_damage;	//centipede damage 0 - 3
 typedef enum {right=0, up, left, down} facing;
 struct CStates{
@@ -1841,7 +1830,8 @@ void Render_Centipede(uint32_t size){
 }
 
 //Lasers **************************************************************************************************************************************************
-typedef enum {yes, no} targethit, borderhit;
+typedef enum {yes, no} targethit,borderhit;
+
 typedef enum {alive, dead} life;
 struct LStates{																//Coordinate, Direction, and Image
 		uint32_t x;
@@ -1854,40 +1844,44 @@ struct LStates{																//Coordinate, Direction, and Image
 typedef struct LStates LType;
 LType Laser;
 
-void Laser_Init(void){
-	Laser.targethit = no;
-	Laser.life = dead;
-
-}
-
 void Laser_Spawn(void){
-	Laser.x = (Ship.x)+5;
+	Laser.x =  (Ship.x)+5;
 	Laser.y = (Ship.y)-13;
 	Laser.image = LaserRed;
 	Laser.targethit = no;
-	Laser.life = alive;
 	Laser.borderhit = no;
+	Laser.life = dead;
+	laserflag = stale;
 	ST7735_DrawBitmap(Laser.x, Laser.y, Laser.image, 1, 8);
-	Sound_Laser();
 }
 
 uint32_t Move_Laser(void){
-  if (Laser.life == dead) return 21;
 	uint32_t i, max, min;
 	Laser.y-=2;
+	
+	//laser hits upper border
+	if((Laser.y) < 8 && Laser.borderhit == no){
+		Laser.borderhit = yes;
+		ST7735_FillRect(Laser.x, 0, 1, 9, 0x0000);
+		return 21;
+	}
+	
+	//laser-mushroom collision
 	for (i=0; i<20 ; i++){
-		if((Mushroom[i].hits)==Hit4) {}
+		if((Mushroom[i].hits)==Hit4 && Laser.targethit == no) {}
 		else if(((Laser.y)-8)<(Mushroom[i].y)){
 			min = (Mushroom[i].x)-2;
 		  max = (Mushroom[i].x)+10;
 			if (((Laser.x)<max)&&((Laser.x)>min)) {
-				ST7735_DrawBitmap(Laser.x, (Laser.y)+2, LaserBlack, 1, 8);
-				Laser.life = dead;
+				Laser.targethit = yes;
+				laserflag = fresh;
+				ST7735_FillRect(Laser.x, Laser.y -8, 1, 9, 0x0000);
+				num_hits++;
 				return i;
 			}
 		}
-}
-		
+	}
+	
 		//centipede-laser collision
 		//returns 100 thru 100 + (size-1) depending on centipede segment hit
 		for(i = 0; i<6; i++){
@@ -1896,8 +1890,8 @@ uint32_t Move_Laser(void){
 				min = (Centipede[i].x)-1;
 				max = (Centipede[i].x)+9;
 				if (((Laser.x)<max)&&((Laser.x)>min)) {
-					Laser.life=dead;
-					//Laser.targethit = yes;
+					laserflag = fresh;
+					Laser.targethit = yes;
 					ST7735_FillRect(Laser.x, Laser.y-8, 1, 9, 0x0000);
 					num_hits++;
 					return i+100;			
@@ -1905,20 +1899,15 @@ uint32_t Move_Laser(void){
 			}
 		}
 		
-	if (Laser.y<14){
-		Laser.life = dead;
-		ST7735_DrawBitmap(Laser.x, (Laser.y)+2, LaserBlack, 1, 8);
-	}
-	ST7735_DrawBitmap(Laser.x, Laser.y, Laser.image, 1, 8);
-	return 21;	
-	}
+		ST7735_DrawBitmap(Laser.x, Laser.y, Laser.image, 1, 8);
+		return 21;	//21 means no hit
+}
 
-//Convert ACD Value to something between 0 and 1890 *****************************************************************************************************
+	
 
 
+//get absolute value of value
 
-
-//Old Mushroom Generation
 /*	int i,j, place, comparex, resultx, comparey, resulty, closey=0, closex=0;
 	int check=1;
 	for (i=0;i<20;i++){
@@ -1947,9 +1936,12 @@ uint32_t Move_Laser(void){
 }
 */
 
-//Easy Timer **************************************************************************************************************************************
 
-void Delay100ms(uint32_t count){uint32_t volatile time;
+
+//Easy Timer
+
+void Delay100ms(uint32_t count){
+	uint32_t volatile time;
   while(count>0){
     time = 727240;  // 0.1sec at 80 MHz
     while(time){
@@ -1960,11 +1952,12 @@ void Delay100ms(uint32_t count){uint32_t volatile time;
 }
 
 
-//************************************************************************************************************************************************
+//*********************************************************************************************
 
-//ADC STUFF
+// ADC STUFF
 void PortF_Init(void){
-	GPIO_PORTF_DIR_R = 0x00;	
+	GPIO_PORTF_DIR_R = 0x02;	//PF1 is blue light
+														//PF2 is switch
   GPIO_PORTF_DEN_R |= 0x0E;
 	GPIO_PORTF_PCTL_R &= ~0x000000FF;
 	GPIO_PORTF_AMSEL_R &= ~0x0E;
@@ -1972,15 +1965,14 @@ void PortF_Init(void){
 }
 
 
-//************************************************************************************************************************************
+//*********************************************************************************************
 
 // SysTick Handler
 // Refreshes screen 30 times per second. will get new controls every 1 second (or 30 frames).
-
 void SysTick_Handler(void){
 	uint32_t i,sum=0, pf3;
-	pf3 = GPIO_PORTF_DATA_R&0x04;   		//check PF1			//Switch 1 is on PF0
-	if (pf3) laserflag=fresh;
+	pf3 = GPIO_PORTF_DATA_R&=0x04 >> 2;   		//check PF2				//Switch 1 is on PF0
+	if (!pf3){laserflag=fresh;}
 		
 	for (i=0;i<5;i++){
 		sum +=ADC_In();
@@ -1994,7 +1986,7 @@ void Game_Win(void);
 	
 void Game_Active(void){
 	ST7735_FillScreen(0x0000);	
-	speed = 10 * 1;
+	speed = 10 * FAST;
 	size = 7;
 	uint32_t wait = 0;
 	Laser_Spawn();
@@ -2026,9 +2018,8 @@ void Game_Active(void){
 			Update_Ship(slider);
 		
 			//if(Laser.targethit == yes || Laser.borderhit == yes){
-			if (laserflag){
-				if (Laser.life!=alive) Laser_Spawn();					
-				laserflag=0;
+			if(laserflag == fresh){
+			Laser_Spawn();
 			}
 					
 			laserhit = Move_Laser();
@@ -2036,6 +2027,7 @@ void Game_Active(void){
 				if(laserhit<21){Mushroom_Update(laserhit);}
 				else if(laserhit >= 100){Centipede_Update(laserhit-100);}
 			}
+		
 			//update direction of head
 			Update_Segment_Directions(size);
 			Centipede_Move(size);		//update future position of head based on slider reading
@@ -2092,88 +2084,53 @@ void Game_Win(){
 }
 
 
-//*******************************************************************************************************************************
+//*********************************************************************************************
 // MAIN METHOD
 
-
-//********************************************************************************************************************************************************************************************
-//********************************************************************************************************************************************************************************************
 int main(void){
 	
-	DisableInterrupts();	
-  TExaS_Init();  // set system clock to 80 MHz	
-	ADC_Init();	
+
+
+	DisableInterrupts();
+  TExaS_Init();  // set system clock to 80 MHz
+	ADC_Init();
+  Random_Init(5);
   Output_Init();
-	PortF_Init();
-	score = 0;
-  ST7735_DrawBitmap(0, 159, cover, 128,160); // Cover Screen
-  SysTick_Init(2666666); //2666666
-  while ((GPIO_PORTF_DATA_R&0x04)!=0x04) ;  //Wait for button press
+	
+	ST7735_DrawBitmap(0, 159, cover, 128,160); // Cover Screen
 	Random_Init(NVIC_ST_CURRENT_R);	
-	ST7735_FillScreen(0x0000);	
+	while ((GPIO_PORTF_DATA_R&=0x04)){};  //Wait for button press
 	
-	Mushroom_Init();
-	size = 7; //initial size of snake -- head, 2 segments, black
-	Centipede_Init(size);
-	Ship_Init();	
-	Laser_Init();
-	Sound_Init();
-	
-  Delay100ms(5);              // delay 5 sec at 80 MHz
-	
+	SysTick_Init(2666666); //2666666
 	EnableInterrupts();
-	Sound_Beat();
 	Game_Active();
-  uint32_t wait = 0;
-	Sound_Init();
-
+	//Game_Lose();
 	
+//Do I need other inits here?
+	//Mushroom_Init();
+//Display Title Image
+//  ST7735_FillScreen(0x0000);            // set screen to black  
+//  ST7735_DrawBitmap(0, 159, cover, 128,160); // Cover Screen
+//	ST7735_FillScreen(0x0000);
+
+//Display Mushrooms
+//	Mushroom_Init();
 	
-	while(1){
-		
-		while(ADCflag==stale){}
-		GPIO_PORTF_DATA_R ^= 0x02;  //toggle PF1
-			
-			ADCflag = stale;
-			slider = Convert(ADCMail);
-			Update_Ship(slider);
-			if (laserflag){
-				if (Laser.life!=alive) Laser_Spawn();					
-				laserflag=0;
-			}
-			laserhit = Move_Laser();
-			if (laserhit!=21) Mushroom_Update(laserhit);
-				
-			//ADC readings for slider, make sure it's directions are correction
-			ST7735_SetCursor(6,0);
-			ST7735_OutString("Score");
-			ST7735_SetCursor(12,0);
-		  LCD_OutDec(score);	
+//Display Centipede
+//	size = 7; //initial size of snake -- head, 2 segments, black
+//	Centipede_Init(size);
 
+//Draw and Initilaize Ship
+//	Ship_Init();
+	
+//  Delay100ms(50);              // delay 5 sec at 80 MHz
 
-			//while(wait<100000){wait++;}
-			//wait = 0;
-					
-			//update direction of head
-			/*Centipede[0].direction = Update_Head_Direction(slider);
-			Update_Segment_Directions(size);
-			Centipede_Move(size);		//update future position of head based on slider reading
-			Collision_Detection();												//wall collision and WIP self-collision
-			Render_Centipede(size);
-			*/
-			
-  }
+//	EnableInterrupts();
+//	SysTick_Init(2666666);
+
+//	Game_Active();
 
 }
 
-//Original Space Invaders End
-/*  ST7735_FillScreen(0x0000);            // set screen to black
-  ST7735_SetCursor(1, 1);
-  ST7735_OutString("GAME OVER");
-  ST7735_SetCursor(1, 2);
-  ST7735_OutString("Nice try,");
-  ST7735_SetCursor(1, 3);
-  ST7735_OutString("Earthling!");
-  ST7735_SetCursor(2, 4);
-  LCD_OutDec(1234);
-*/  
+
+
