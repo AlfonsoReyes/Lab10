@@ -2142,8 +2142,14 @@ int main(void){
 				laserflag=0;
 			}
 			laserhit = Move_Laser();
-			if (laserhit!=21) Mushroom_Update(laserhit);
-				
+			if (laserhit!=21){
+				if(laserhit < 21){
+				Mushroom_Update(laserhit);
+				}
+				else if(laserhit>=100){
+				Centipede_Update(laserhit);
+				}
+			}
 			//ADC readings for slider, make sure it's directions are correction
 			ST7735_SetCursor(6,0);
 			ST7735_OutString("Score");
