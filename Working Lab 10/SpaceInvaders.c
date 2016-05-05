@@ -2151,6 +2151,14 @@ int main(void){
 			}
 			
 			laserhit = Move_Laser();
+<<<<<<< HEAD
+			if (laserhit!=21){
+				if(laserhit < 21){
+				Mushroom_Update(laserhit);
+				}
+				else if(laserhit>=100){
+				Centipede_Update(laserhit);
+=======
 			
 			if (laserhit!=21){
 				if(laserhit<21){
@@ -2158,6 +2166,7 @@ int main(void){
 				}
 				else if(laserhit>=100){
 					Centipede_Update(laserhit);
+>>>>>>> origin/master
 				}
 			}
 			//ADC readings for slider, make sure it's directions are correction
