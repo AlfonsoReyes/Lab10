@@ -9,3 +9,5 @@ Working Lab 10/spaceinvaders.o
 *.dep
 *.axf
 *.o
+*.axf
+*.o
