@@ -9,33 +9,61 @@ Project File Date:  05/01/2016
 <h2>Output:</h2>
 Build target 'SpaceInvaders'
 compiling SpaceInvaders.c...
-SpaceInvaders.c(1700): warning:  #550-D: variable "min" was set but never used
+SpaceInvaders.c(1758): warning:  #550-D: variable "min" was set but never used
         uint32_t i,min,max;
-SpaceInvaders.c(1700): warning:  #550-D: variable "max" was set but never used
+SpaceInvaders.c(1758): warning:  #550-D: variable "max" was set but never used
         uint32_t i,min,max;
-SpaceInvaders.c(1824): warning:  #188-D: enumerated type mixed with another type
+SpaceInvaders.c(1882): warning:  #188-D: enumerated type mixed with another type
         return 25;
-SpaceInvaders.c(1830): warning:  #177-D: variable "w" was declared but never referenced
+SpaceInvaders.c(1888): warning:  #177-D: variable "w" was declared but never referenced
         int w = 0;
-SpaceInvaders.c(1879): warning:  #223-D: function "Sound_Laser" declared implicitly
+SpaceInvaders.c(1937): warning:  #223-D: function "Sound_Laser" declared implicitly
         Sound_Laser();
-SpaceInvaders.c(2008): warning:  #177-D: variable "wait" was declared but never referenced
+SpaceInvaders.c(2066): warning:  #177-D: variable "wait" was declared but never referenced
         uint32_t wait = 0;
-SpaceInvaders.c(2124): warning:  #223-D: function "Sound_Beat" declared implicitly
+SpaceInvaders.c(2228): warning:  #223-D: function "Sound_Beat" declared implicitly
         Sound_Beat();
-SpaceInvaders.c(2126): warning:  #177-D: variable "wait" was declared but never referenced
+SpaceInvaders.c(2230): warning:  #177-D: variable "wait" was declared but never referenced
     uint32_t wait = 0;
 SpaceInvaders.c: 8 warnings, 0 errors
 linking...
-Program Size: Code=8228 RO-data=45616 RW-data=1484 ZI-data=1756  
+Program Size: Code=8724 RO-data=45840 RW-data=3336 ZI-data=1768  
 ".\SpaceInvaders.axf" - 0 Error(s), 8 Warning(s).
-red implicitly
-        Sound_Beat();
-SpaceInvaders.c(2127): warning:  #177-D: variable "wait" was declared but never referenced
+ble "wait" was declared but never referenced
     uint32_t wait = 0;
-SpaceInvaders.c: 8 warnings, 0 errors
-compiling ST7735.c...
-compiling SysTickInts.c...
-linking...
-Program Size: Code=8456 RO-data=45616 RW-data=1484 ZI-data=1756  
-".\SpaceInvaders.axf" - 0 Error(s), 9 Warning(s).
+SpaceInvaders.c(2258): error:  #79: expected a type specifier
+                        ST7735_SetCursor(6,0);
+SpaceInvaders.c(2258): error:  #79: expected a type specifier
+                        ST7735_SetCursor(6,0);
+SpaceInvaders.c(2258): error:  #260-D: explicit type is missing ("int" assumed)
+                        ST7735_SetCursor(6,0);
+SpaceInvaders.c(2258): error:  #147: declaration is incompatible with "void ST7735_SetCursor(uint32_t, uint32_t)" (declared at line 241 of "ST7735.h")
+                        ST7735_SetCursor(6,0);
+SpaceInvaders.c(2259): error:  #79: expected a type specifier
+                        ST7735_OutString("Score");
+SpaceInvaders.c(2259): error:  #260-D: explicit type is missing ("int" assumed)
+                        ST7735_OutString("Score");
+SpaceInvaders.c(2259): error:  #147: declaration is incompatible with "void ST7735_OutString(char *)" (declared at line 391 of "ST7735.h")
+                        ST7735_OutString("Score");
+SpaceInvaders.c(2260): error:  #79: expected a type specifier
+                        ST7735_SetCursor(12,0);
+SpaceInvaders.c(2260): error:  #79: expected a type specifier
+                        ST7735_SetCursor(12,0);
+SpaceInvaders.c(2260): error:  #260-D: explicit type is missing ("int" assumed)
+                        ST7735_SetCursor(12,0);
+SpaceInvaders.c(2261): error:  #260-D: explicit type is missing ("int" assumed)
+                  LCD_OutDec(score);    
+SpaceInvaders.c(2261): error:  #92: identifier-list parameters may only be used in a function definition
+                  LCD_OutDec(score);    
+SpaceInvaders.c(2261): error:  #147: declaration is incompatible with "void LCD_OutDec(uint32_t)" (declared at line 423 of "ST7735.h")
+                  LCD_OutDec(score);    
+SpaceInvaders.c(2267): error:  #169: expected a declaration
+                        if(diff_delay >= speed){                
+SpaceInvaders.c(2276): warning:  #12-D: parsing restarts here after previous syntax error
+                        Render_Centipede(size);
+SpaceInvaders.c(2279): error:  #169: expected a declaration
+    }
+SpaceInvaders.c(2293): warning: At end of source:  #12-D: parsing restarts here after previous syntax error
+SpaceInvaders.c: 11 warnings, 16 errors
+".\SpaceInvaders.axf" - 16 Error(s), 11 Warning(s).
+Target not created
