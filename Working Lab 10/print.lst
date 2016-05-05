@@ -293,7 +293,7 @@ ARM Macro Assembler    Page 5
   197 00000134                 END                          ; end of file
 Command Line: --debug --xref --cpu=Cortex-M4 --apcs=interwork --depend=.\print.
 d -o.\print.o -IC:\Keil\ARM\RV31\INC -IC:\Keil\ARM\CMSIS\Include -IC:\Keil\ARM\
-Inc\Luminary --list=.\print.lst Print.s
+Inc\Luminary --predefine="__RTX SETA 1" --list=.\print.lst Print.s
 
 
 
@@ -455,4 +455,4 @@ Symbol: ST7735_OutString
       None
 Comment: ST7735_OutString unused
 2 symbols
-345 symbols in table
+346 symbols in table
