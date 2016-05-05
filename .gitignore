@@ -11,3 +11,9 @@ Working Lab 10/spaceinvaders.o
 *.o
 *.axf
 *.o
+*.uvopt
+*.map
+*.axf
+*.o
+*.map
+*.htm
