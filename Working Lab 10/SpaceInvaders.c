@@ -2115,7 +2115,7 @@ int main(void){
 	PortF_Init();
 	score = 0;
   ST7735_DrawBitmap(0, 159, cover, 128,160); // Cover Screen
-  SysTick_Init(1333333); //2666666
+  SysTick_Init(1333333); //2666666 (30 FPS),  1333333 (60FPS)
   //while ((GPIO_PORTF_DATA_R&0x04)!=0x04) ;  //Wait for button press
 	Random_Init(NVIC_ST_CURRENT_R);	
 	ST7735_FillScreen(0x0000);	
@@ -2156,8 +2156,8 @@ int main(void){
 				if(laserhit<21){
 					Mushroom_Update(laserhit);
 				}
-				else if(laserhit>100){
-					
+				else if(laserhit>=100){
+					Centipede_Update(laserhit);
 				}
 			}
 			//ADC readings for slider, make sure it's directions are correction
