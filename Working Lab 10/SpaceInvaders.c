@@ -2162,6 +2162,7 @@ int main(void){
 			//while(wait<100000){wait++;}
 			//wait = 0;
 			
+			//diff delay affects speed and which centipedes on screen. 
 			if(diff_delay >= speed){		
 			//update direction of head
 				Centipede[0].direction = Update_Head_Direction();
