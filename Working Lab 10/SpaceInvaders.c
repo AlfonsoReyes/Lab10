@@ -1996,7 +1996,6 @@ void SysTick_Handler(void){
 	sum = sum/5;
 	ADCMail = sum;
 	ADCflag = fresh;
-	diff_delay++;
 }
 void Game_Lose(void);
 void Game_Win(void);
@@ -2013,53 +2012,63 @@ void Game_Active(void){
 	Mushroom_Init();
 	Ship_Init();
 	Centipede_Init(size);
-	EnableInterrupts();
+
 
 	while(1){
-		
-		while(ADCflag==stale){}
-		GPIO_PORTF_DATA_R ^= 0x02;  //toggle PF1
+
+	while(ADCflag==stale){}
 			
+			
+			//ADC readings for slider, make sure it's directions are correction
+			ST7735_SetCursor(0,0);
+		  LCD_OutDec(num_hits);	
+		  //LCD_OutFix(Convert(ADCMail));	
+      //ST7735_SetCursor(6,0);
+			//ST7735_OutChar('c');
+			//ST7735_OutChar('m');
+
+			//while(wait<100000){wait++;}
+			//wait = 0;
 			ADCflag = stale;
 			slider = Convert(ADCMail);
 			Update_Ship(slider);
+		
+			//if(Laser.targethit == yes || Laser.borderhit == yes){
 			if (laserflag){
 				if (Laser.life!=alive) Laser_Spawn();					
 				laserflag=0;
 			}
-			
-			laserhit = Move_Laser();
-			
-			if (laserhit!=21){
-				if(laserhit<21){
-					Mushroom_Update(laserhit);
-				}
-				else if(laserhit>=100){
-					Centipede_Update(laserhit);
-				}
-			}
-			//ADC readings for slider, make sure it's directions are correction
-			ST7735_SetCursor(6,0);
-			ST7735_OutString("Score");
-			ST7735_SetCursor(12,0);
-		  LCD_OutDec(score);	
-
-			//while(wait<100000){wait++;}
-			//wait = 0;
 					
+			laserhit = Move_Laser();
+			if (laserhit!=21){
+				if(laserhit<21){Mushroom_Update(laserhit);}
+				else if(laserhit >= 100){Centipede_Update(laserhit-100);}
+			}
 			//update direction of head
-			Centipede[0].direction = Update_Head_Direction();
 			Update_Segment_Directions(size);
 			Centipede_Move(size);		//update future position of head based on slider reading
 			Collision_Detection();												//wall collision and WIP self-collision
 			Render_Centipede(size);
+
 			
-		}
+			Centipede[0].direction = Update_Head_Direction();
+			
+			//Centipede_Move(size);		//update future position of head based on slider reading
+			//Collision_Detection();												//wall collision and WIP self-collision
+			//Render_Centipede(size);
+			
+			if(Centipede[0].y > 149){
+				Game_Lose();
+			}
+		
+			if(Centipede[0].c_hp == c_Hit3){
+				Game_Win();
+			}
+	}
 	
 }
 
 void Game_Lose(void){
-	DisableInterrupts();
 	ST7735_FillScreen(0x0000);
 	ST7735_SetCursor(5,5);
 	ST7735_OutString("YOU LOSE!");
@@ -2069,12 +2078,12 @@ void Game_Lose(void){
 	ST7735_OutString("to try again.");
 	//while(1){}
 	while ((GPIO_PORTF_DATA_R&=0x04)) ;  //Wait for button press
-	Game_Active();
+	//Game_Active();
 	
 }
 
 void Game_Win(){
-	DisableInterrupts();
+	
 	ST7735_FillScreen(0x0000);
 	ST7735_SetCursor(5,5);
 	ST7735_OutString("VICTORY ACHIEVED!!");
@@ -2122,13 +2131,11 @@ int main(void){
 	
 	EnableInterrupts();
 	Sound_Beat();
-	//Game_Active();
+	Game_Active();
   uint32_t wait = 0;
 	Sound_Init();
+
 	
-	//1 is  fast <-----> 10 is slow
-	speed = 5;
-	diff_delay = 0;
 	
 	while(1){
 		
@@ -2159,20 +2166,17 @@ int main(void){
 			ST7735_SetCursor(12,0);
 		  LCD_OutDec(score);	
 
+
 			//while(wait<100000){wait++;}
 			//wait = 0;
-			
-			if(diff_delay >= speed){		
+					
 			//update direction of head
-				Centipede[0].direction = Update_Head_Direction();
-				Update_Segment_Directions(size);
-				Centipede_Move(size);		//update future position of head based on slider reading
-				Collision_Detection();				//wall collision and WIP self-collision
-				diff_delay =1;
-			}
-			
+			/*Centipede[0].direction = Update_Head_Direction(slider);
+			Update_Segment_Directions(size);
+			Centipede_Move(size);		//update future position of head based on slider reading
+			Collision_Detection();												//wall collision and WIP self-collision
 			Render_Centipede(size);
-			
+			*/
 			
   }
 
