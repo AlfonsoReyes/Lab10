@@ -1670,18 +1670,26 @@ void Centipede_Update(uint32_t lz_hit){
 	int k;
 	
 	(Centipede[lz_hit].c_hp)++;
-		if ((Centipede[lz_hit].c_hp)==c_Hit1)
+		if ((Centipede[lz_hit].c_hp)==c_Hit1){
 		   ST7735_DrawBitmap(Centipede[lz_hit].x,Centipede[lz_hit].y, BodyGreen2down, 8, 10);
+			 score += 100;
+		}
 		
-		if ((Centipede[lz_hit].c_hp)==c_Hit2)
+		if ((Centipede[lz_hit].c_hp)==c_Hit2){
 		   ST7735_DrawBitmap(Centipede[lz_hit].x,Centipede[lz_hit].y, BodyGreen2left, 8, 10);
-		
+			 score += 100;
+		}
 		//if segment is destroyed, all following segments also destroyed
 		if ((Centipede[lz_hit].c_hp)==c_Hit3){
 			for(k = lz_hit; k < size-1; k++){
-				Centipede[k].c_hp = c_Hit3;
-				Centipede[k].image = black;
+				if(Centipede[k].image != black){
 				
+					score += 150;
+					
+				}
+				Centipede[k].c_hp = c_Hit3;
+				Centipede[k].image = black;					
+								
 			}
 	
 		}
@@ -1892,7 +1900,7 @@ uint32_t Move_Laser(void){
 		//returns 100 thru 100 + (size-1) depending on centipede segment hit
 		for(i = 0; i<6; i++){
 			if((Centipede[i].c_hp)== c_Hit3){}
-			else if(((Laser.y)-8)<(Centipede[i].y)){
+			else if(((Laser.y)-8)<(Centipede[i].y && Laser.life != dead)){
 				min = (Centipede[i].x)-1;
 				max = (Centipede[i].x)+9;
 				if (((Laser.x)<max)&&((Laser.x)>min)) {
@@ -2107,8 +2115,8 @@ int main(void){
 	PortF_Init();
 	score = 0;
   ST7735_DrawBitmap(0, 159, cover, 128,160); // Cover Screen
-  SysTick_Init(2666666); //2666666
-  while ((GPIO_PORTF_DATA_R&0x04)!=0x04) ;  //Wait for button press
+  SysTick_Init(1333333); //2666666 (30 FPS),  1333333 (60FPS)
+  //while ((GPIO_PORTF_DATA_R&0x04)!=0x04) ;  //Wait for button press
 	Random_Init(NVIC_ST_CURRENT_R);	
 	ST7735_FillScreen(0x0000);	
 	
@@ -2141,13 +2149,24 @@ int main(void){
 				if (Laser.life!=alive) Laser_Spawn();					
 				laserflag=0;
 			}
+			
 			laserhit = Move_Laser();
+<<<<<<< HEAD
 			if (laserhit!=21){
 				if(laserhit < 21){
 				Mushroom_Update(laserhit);
 				}
 				else if(laserhit>=100){
 				Centipede_Update(laserhit);
+=======
+			
+			if (laserhit!=21){
+				if(laserhit<21){
+					Mushroom_Update(laserhit);
+				}
+				else if(laserhit>=100){
+					Centipede_Update(laserhit);
+>>>>>>> origin/master
 				}
 			}
 			//ADC readings for slider, make sure it's directions are correction
