@@ -7,3 +7,5 @@ Working Lab 10/spaceinvaders.o
 *.htm
 *.axf
 *.dep
+*.axf
+*.o
