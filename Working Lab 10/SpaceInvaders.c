@@ -1496,6 +1496,26 @@ const unsigned short LaserBlack[] = {
  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 };
 
+//arrow 7 rows 8 cols
+const unsigned short arrow_24[] = {
+ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x07FF, 0x07FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+ 0x0000, 0x07FF, 0x07FF, 0x07FF, 0x07FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x07FF, 0x07FF, 0x07FF, 0x07FF, 0x07FF, 0x07FF, 0x0000,
+ 0x0000, 0x07FF, 0x07FF, 0x07FF, 0x07FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x07FF, 0x07FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+
+};
+
+
+
+const unsigned short arrow_blackout[] = {
+ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+
+};
+
+
 
 //Global Variables *************************************************************************************************************************************
 uint32_t Data;        // 12-bit ADC
@@ -1513,6 +1533,9 @@ uint32_t right_wall_collision;
 uint32_t num_hits;	//number of times laser hit mushroom or centipede
 uint32_t diff_delay;
 
+void Difficulty_Select(void);
+void Game_Active(void);
+
 //Initialize player ship **********************************************************************************************************************************
 struct SStates{																  //Coordinates, Damage, and Image
 		uint32_t x;
@@ -1521,7 +1544,42 @@ struct SStates{																  //Coordinates, Damage, and Image
 		const unsigned short* image;
 };
 typedef struct SStates Stype;
-Stype Ship;	
+Stype Ship;
+Stype Arrow;
+typedef enum {easy,medium,hard} difficulties;
+difficulties diff;
+
+//initiate arrow for selection stuff
+void Arrow_Init(void){
+	Arrow.x = 10;
+	Arrow.y = 55;
+	Arrow.lives = 0;
+	Arrow.image = arrow_24;
+	ST7735_DrawBitmap(Arrow.x, Arrow.y, Arrow.image, 8, 7);
+}
+
+//change location of difficulty selection arrow, also change difficulty modifer
+void Update_Arrow(uint32_t slider){
+		
+		if(slider < 666){
+			diff = easy;
+			ST7735_DrawBitmap(Arrow.x, Arrow.y, arrow_blackout, 8, 7);
+			Arrow.y = 55;
+		}
+		else if(slider >666 && slider < 1333){
+			diff = medium;
+			ST7735_DrawBitmap(Arrow.x, Arrow.y, arrow_blackout, 8, 7);
+			Arrow.y = 75;
+		}
+		else if(slider > 1333){
+			diff = hard;
+			ST7735_DrawBitmap(Arrow.x, Arrow.y, arrow_blackout, 8, 7);
+			Arrow.y = 95;
+		}
+	
+	
+		ST7735_DrawBitmap(Arrow.x, Arrow.y, Arrow.image, 8, 7);
+}
 
 void Ship_Init(void){
 	Ship.x = 53;
@@ -2076,7 +2134,7 @@ void Game_Lose(void){
 	ST7735_OutString("to try again.");
 	//while(1){}
 	while ((GPIO_PORTF_DATA_R&=0x04)) ;  //Wait for button press
-	Game_Active();
+	Difficulty_Select();
 	
 }
 
@@ -2097,6 +2155,39 @@ void Game_Win(){
 	
 }
 
+void Difficulty_Select(){
+	EnableInterrupts();
+	ST7735_FillScreen(0x0000);
+	ST7735_SetCursor(2,3);
+	ST7735_OutString("Select Difficulty");
+	ST7735_SetCursor(4,5);
+	ST7735_OutString("MILD");
+	ST7735_SetCursor(4,7);
+	ST7735_OutString("SPICY");
+	ST7735_SetCursor(4,9);
+	ST7735_OutString("INFERNO");
+	
+	Arrow_Init();
+	EnableInterrupts();
+	//while ((GPIO_PORTF_DATA_R&=0x04)){ //Wait for button press
+	while(1){
+			while(ADCflag==stale){}
+			GPIO_PORTF_DATA_R ^= 0x02;  //toggle PF1
+			
+			ADCflag = stale;
+			slider = Convert(ADCMail);
+			Update_Arrow(slider);
+				
+			if((GPIO_PORTF_DATA_R&=0x04))
+			{
+				DisableInterrupts();
+				return;
+			}
+				
+	}
+	
+}
+
 
 //*******************************************************************************************************************************
 // MAIN METHOD
@@ -2113,8 +2204,13 @@ int main(void){
 	PortF_Init();
 	score = 0;
   ST7735_DrawBitmap(0, 159, cover, 128,160); // Cover Screen
-  SysTick_Init(1333333); //2666666 (30 FPS),  1333333 (60FPS)
+  SysTick_Init(1333333); //2666666 (30 FPS),  1333333 (60FPS)\
+	
+	//brings you to difficulty selection screen.
+	Difficulty_Select();
+	
   //while ((GPIO_PORTF_DATA_R&0x04)!=0x04) ;  //Wait for button press
+	
 	Random_Init(NVIC_ST_CURRENT_R);	
 	ST7735_FillScreen(0x0000);	
 	
@@ -2125,6 +2221,7 @@ int main(void){
 	Laser_Init();
 	Sound_Init();
 	
+	
   Delay100ms(5);              // delay 5 sec at 80 MHz
 	
 	EnableInterrupts();
@@ -2134,8 +2231,9 @@ int main(void){
 	Sound_Init();
 	
 	//1 is  fast <-----> 10 is slow
-	speed = 5;
-	diff_delay = 0;
+	if(diff == easy){speed = 5;}
+	if(diff == medium){ speed = 3;}
+	if(diff == hard){speed = 1;}
 	
 	while(1){
 		
