@@ -2,3 +2,10 @@
 *.htm
 Working Lab 10/SpaceInvaders.build_log.htm
 *.htm
+*.dep
+Working Lab 10/spaceinvaders.o
+*.htm
+*.axf
+*.dep
+*.axf
+*.o
