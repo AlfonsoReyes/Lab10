@@ -3,7 +3,43 @@
 <pre>
 <h1>µVision Build Log</h1>
 <h2>Project:</h2>
-C:\Users\Administrator\Downloads\Working Lab 10\SpaceInvaders.uvproj
+C:\Users\Administrator\Documents\GitHub\Lab10\Working Lab 10\SpaceInvaders.uvproj
 Project File Date:  05/01/2016
 
 <h2>Output:</h2>
+Build target 'SpaceInvaders'
+assembling startup.s...
+assembling random.s...
+assembling Print.s...
+assembling LCD.s...
+compiling DAC.c...
+compiling ADC.c...
+ADC.c(15): warning:  #550-D: variable "delay" was set but never used
+        uint32_t delay;
+ADC.c: 1 warning, 0 errors
+compiling Timer0.c...
+compiling Timer1.c...
+compiling Sound.c...
+compiling SpaceInvaders.c...
+SpaceInvaders.c(1692): warning:  #550-D: variable "min" was set but never used
+        uint32_t i,min,max;
+SpaceInvaders.c(1692): warning:  #550-D: variable "max" was set but never used
+        uint32_t i,min,max;
+SpaceInvaders.c(1816): warning:  #188-D: enumerated type mixed with another type
+        return 25;
+SpaceInvaders.c(1822): warning:  #177-D: variable "w" was declared but never referenced
+        int w = 0;
+SpaceInvaders.c(1871): warning:  #223-D: function "Sound_Laser" declared implicitly
+        Sound_Laser();
+SpaceInvaders.c(1999): warning:  #177-D: variable "wait" was declared but never referenced
+        uint32_t wait = 0;
+SpaceInvaders.c(2125): warning:  #223-D: function "Sound_Beat" declared implicitly
+        Sound_Beat();
+SpaceInvaders.c(2127): warning:  #177-D: variable "wait" was declared but never referenced
+    uint32_t wait = 0;
+SpaceInvaders.c: 8 warnings, 0 errors
+compiling ST7735.c...
+compiling SysTickInts.c...
+linking...
+Program Size: Code=8456 RO-data=45616 RW-data=1484 ZI-data=1756  
+".\SpaceInvaders.axf" - 0 Error(s), 9 Warning(s).
