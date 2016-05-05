@@ -2073,6 +2073,11 @@ void Game_Active(void){
 	Centipede_Init(size);
 	EnableInterrupts();
 
+	//1 is  fast <-----> 10 is slow
+	if(diff == easy){speed = 5;}
+	if(diff == medium){ speed = 3;}
+	if(diff == hard){speed = 1;}
+	
 	while(1){
 		
 		while(ADCflag==stale){}
@@ -2155,6 +2160,7 @@ void Game_Win(){
 	
 }
 
+//waits for button press before movign on to game, select mode
 void Difficulty_Select(){
 	EnableInterrupts();
 	ST7735_FillScreen(0x0000);
